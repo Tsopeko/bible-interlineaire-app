@@ -16,40 +16,42 @@ def load_book(name):
 st.title("📖 Baiboly Malagasy 1865")
 
 if os.path.exists(DATA_PATH):
-    # Lister les fichiers .json dans le dossier data
+    # Lister les fichiers .json présents
     files = [f.replace('.json', '') for f in os.listdir(DATA_PATH) if f.endswith('.json')]
     
     if files:
-        # 1. CHOIX DU LIVRE
+        # Sélection du livre (ex: 1-jaona, samoela...)
         livre_choisi = st.sidebar.selectbox("Fidio ny boky", sorted(files))
         data = load_book(livre_choisi)
         
         if data:
-            # 2. EXTRACTION DES TOKO (Chapitres)
-            # On récupère toutes les clés qui sont des numéros (ex: "1", "2")
-            toko_keys = sorted([k for k in data.keys() if k.isdigit()], key=int)
-            
+            # On cherche les chapitres (soit une liste, soit des clés "1", "2"...)
+            if isinstance(data, dict):
+                toko_keys = sorted([k for k in data.keys() if k.isdigit()], key=int)
+            elif isinstance(data, list):
+                toko_keys = [str(i+1) for i in range(len(data))]
+            else:
+                toko_keys = []
+
             if toko_keys:
                 chap_num = st.sidebar.selectbox("Toko", toko_keys)
-                
                 st.header(f"{livre_choisi} - Toko {chap_num}")
                 st.divider()
                 
-                # 3. EXTRACTION DES VERSETS
-                versets_data = data[chap_num]
+                # Récupération du contenu du chapitre
+                idx = int(chap_num) - 1 if isinstance(data, list) else chap_num
+                versets_data = data[idx]
                 
+                # Affichage des versets (format dictionnaire ou liste)
                 if isinstance(versets_data, dict):
-                    # Si les versets sont aussi des clés "1", "2"...
-                    verset_keys = sorted([v for v in versets_data.keys() if v.isdigit()], key=int)
-                    for v_num in verset_keys:
-                        txt = versets_data[v_num]
-                        st.write(f"**{v_num}.** {txt}")
+                    v_keys = sorted([v for v in versets_data.keys() if v.isdigit()], key=int)
+                    for v_num in v_keys:
+                        st.write(f"**{v_num}.** {versets_data[v_num]}")
                 elif isinstance(versets_data, list):
-                    # Si les versets sont une simple liste
                     for i, txt in enumerate(versets_data):
                         st.write(f"**{i+1}.** {txt}")
             else:
-                st.error("Tsy hita ny toko ato amin'ity fichier ity.")
+                st.warning("Tsy hita ny toko ato amin'ity fichier ity.")
     else:
         st.info("Ampidiro ao amin'ny dossier 'data' ny fichiers .json")
 else:
