@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import os
 
+# Fikirana fototra
 st.set_page_config(page_title="Baiboly Malagasy 1865", layout="wide", page_icon="📖")
 
 DATA_PATH = "data"
@@ -16,7 +17,7 @@ def load_book(name):
 
 st.title("📖 Baiboly Malagasy 1865")
 
-# --- PARAMÈTRES D'AFFICHAGE ---
+# --- PARAMÈTRES D'AFFICHAGE (SideBar) ---
 st.sidebar.header("⚙️ Fikirana")
 taille_texte = st.sidebar.slider("Haben'ny soratra", 14, 40, 20)
 st.sidebar.divider()
@@ -40,9 +41,13 @@ if mot_cle:
                     if isinstance(versets, dict):
                         for v_num, txt in versets.items():
                             if mot_cle.lower() in txt.lower():
-                                # Fomba fanoratana tsotra tsy misy TypeError
-                                style = f"font-size:{taille_texte}px; border-left:3px solid red; padding-left:10px; margin-bottom:20px;"
-                                st.markdown(f'<div style="{style}"><b>{file} {chap_num}:{v_num}</b><br>{txt}</div>', unsafe_html=True)
+                                # Namboarina ho tsotra mba tsy hisy TypeError intsony
+                                ref = f"{file} {chap_num}:{v_num}"
+                                st.write(f"**{ref}**")
+                                # Mampiasa HTML tsotra tsy misy variable be loatra ao anaty markdown
+                                style_html = f'<p style="font-size:{taille_texte}px;">{txt}</p>'
+                                st.markdown(style_html, unsafe_html=True)
+                                st.divider()
                                 found_count += 1
     st.sidebar.info(f"Verset {found_count} no hita.")
     st.stop() 
@@ -62,10 +67,16 @@ if os.path.exists(DATA_PATH):
                 versets_dict = data[chap_num]
                 v_keys = sorted([v for v in versets_dict.keys() if v.isdigit()], key=int)
                 
-                # Ity ny fomba namboarina mba tsy hisy diso intsony
+                # Fampisehoana ny andininy
                 for v_num in v_keys:
                     txt_verset = versets_dict[v_num]
-                    # Tsy asiana fonon-tselatra {} maromaro intsony ao anaty markdown iray
-                    st.markdown(f'<div style="font-size:{taille_texte}px; margin-bottom:10px;"><b>{v_num}.</b> {txt_verset}</div>', unsafe_html=True)
+                    # Eto no namboarina: nampiasaina variable style_html mazava tsara
+                    # mba tsy hifangaro ny Python amin'ny famakiana ny fonon-tselatra
+                    verset_html = f'<div style="font-size:{taille_texte}px; margin-bottom:12px;"><b>{v_num}.</b> {txt_verset}</div>'
+                    st.markdown(verset_html, unsafe_html=True)
+            else:
+                st.warning("Tsy hita ny toko ato amin'ity boky ity.")
     else:
         st.info("Ampidiro ao anatin'ny dossier 'data' ireo fichiers .json")
+else:
+    st.error("Tsy hita ny dossier 'data' ao amin'ny GitHub-nao.")
