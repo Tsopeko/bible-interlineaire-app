@@ -13,11 +13,11 @@ def load_json(path):
     try:
         with open(path, 'r', encoding='utf-8') as f:
             return json.load(f)
-    except Exception as e:
-        return None
+    except Exception: return None
 
 st.title("📖 Baiboly Malagasy Interlineaire")
 
+# --- LECTURE ---
 if os.path.exists(DATA_PATH):
     files = [f for f in os.listdir(DATA_PATH) if f.endswith('.json')]
     if files:
@@ -26,13 +26,14 @@ if os.path.exists(DATA_PATH):
         
         if bible_data:
             organized = {}
-            # Raha format mavesatra (misy 'objects')
+            # Raha format SQL-to-JSON (misy 'objects')
             if isinstance(bible_data, dict) and 'objects' in bible_data:
                 for entry in bible_data['objects']:
+                    # Mitady anarana malalaka (flexible keys)
                     b = str(entry.get('book_name', entry.get('book', 'Baiboly')))
                     c = str(entry.get('chapter', entry.get('chapter_number', '1')))
                     v = str(entry.get('verse', entry.get('verse_number', '1')))
-                    # Mitady ny soratra (text/content/body)
+                    # Mitady ny soratra (flexible text keys)
                     t = entry.get('text', entry.get('content', entry.get('body', '...')))
                     
                     if b not in organized: organized[b] = {}
@@ -67,9 +68,8 @@ if os.path.exists(DATA_PATH):
                             for i, code in enumerate(strong_codes):
                                 if cols[i].button(f"🔍 {code}", key=f"{book_name}_{ch_sel}_{n}_{code}"):
                                     fn = "strongs-greek-dictionary.json" if code.startswith('G') else "strongs-hebrew-dictionary.json"
-                                    # Load dictionary from root folder
-                                    s_data = load_json(fn)
+                                    s_data = load_json(fn) # Mitady ao amin'ny root folder
                                     if s_data and code in s_data:
                                         st.info(f"**{code}:** {s_data[code]}")
-            else:
-                st.error("Tsy azo vakiana ny rafitra JSON.")
+    else:
+        st.warning("Ampidiro ny rakitra JSON ao anaty dossier 'data'.")
