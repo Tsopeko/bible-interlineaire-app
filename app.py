@@ -12,22 +12,22 @@ def load_bible_data():
     try:
         with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            # Ny andininy dia ao anatin'ny objects[0] -> rows
-            # Isaky ny row: [id, book_number, chapter, verse, text]
+            # Ny rows dia ao amin'ny objects[0] (sary 5db10129)
+            # Row structure: [id, book_name, chapter, verse, text]
             rows = data["objects"][0]["rows"]
             
             # Ovaina ho rafitra madio (Boky -> Toko -> Andininy)
-            structured_bible = {}
+            structured = {}
             for r in rows:
-                book = str(r[1]) # Ny laharana na anaran'ny boky
+                book = str(r[1]) # Anaran'ny boky
                 ch = str(r[2])   # Toko
                 v_num = str(r[3]) # Andininy
-                text = r[4]      # Ny soratra masina
+                text = r[4]      # Soratra
                 
-                if book not in structured_bible: structured_bible[book] = {}
-                if ch not in structured_bible[book]: structured_bible[book][ch] = {}
-                structured_bible[book][ch][v_num] = text
-            return structured_bible
+                if book not in structured: structured[book] = {}
+                if ch not in structured[book]: structured[book][ch] = {}
+                structured[book][ch][v_num] = text
+            return structured
     except Exception as e:
         st.error(f"Fahadisoana: {e}")
         return None
@@ -38,32 +38,33 @@ bible = load_bible_data()
 
 if bible:
     # 1. Safidy Boky
-    books = sorted(list(bible.keys()), key=lambda x: int(x) if x.isdigit() else 0)
-    selected_book = st.sidebar.selectbox("Fidio ny boky", books)
+    books = sorted(list(bible.keys()))
+    book_sel = st.sidebar.selectbox("Fidio ny boky", books)
     
     # 2. Safidy Toko
-    chapters = bible[selected_book]
+    chapters = bible[book_sel]
     ch_list = sorted(list(chapters.keys()), key=lambda x: int(x) if x.isdigit() else 0)
-    selected_ch = st.sidebar.selectbox("Toko", ch_list)
+    ch_sel = st.sidebar.selectbox("Toko", ch_list)
     
-    st.subheader(f"Boky {selected_book} - Toko {selected_ch}")
+    st.subheader(f"{book_sel} - Toko {ch_sel}")
     
     # 3. Fampisehoana ny andininy
-    verses = chapters[selected_ch]
-    for v_num in sorted(verses.keys(), key=lambda x: int(x) if x.isdigit() else 0):
-        txt = verses[v_num]
-        st.write(f"**{v_num}.** {txt}")
+    verses = chapters[ch_sel]
+    for v in sorted(verses.keys(), key=lambda x: int(x) if x.isdigit() else 0):
+        txt = verses[v]
+        st.write(f"**{v}.** {txt}")
         
         # Fikarohana kaody Strong
-        strong_codes = re.findall(r'[GH]\d+', txt)
-        if strong_codes:
-            cols = st.columns(len(strong_codes))
-            for i, code in enumerate(strong_codes):
-                if cols[i].button(f"🔍 {code}", key=f"{selected_ch}_{v_num}_{code}"):
-                    dict_file = "strongs-greek-dictionary.json" if code.startswith('G') else "strongs-hebrew-dictionary.json"
-                    if os.path.exists(dict_file):
-                        with open(dict_file, 'r', encoding='utf-8') as df:
+        codes = re.findall(r'[GH]\d+', txt)
+        if codes:
+            cols = st.columns(len(codes))
+            for i, c in enumerate(codes):
+                if cols[i].button(f"🔍 {c}", key=f"{ch_sel}_{v}_{c}"):
+                    # Ampiasaina ny rakitra dictionary efa ao (sary 17ad75d4)
+                    fn = "strongs-greek-dictionary.json" if c.startswith('G') else "strongs-hebrew-dictionary.json"
+                    if os.path.exists(fn):
+                        with open(fn, 'r', encoding='utf-8') as df:
                             s_dict = json.load(df)
-                            st.info(f"**{code}:** {s_dict.get(code, 'Tsy hita ny dikan-teny')}")
+                            st.info(f"**{c}:** {s_dict.get(c, 'Tsy hita')}")
 else:
     st.info("Andraso kely, mbola mampiditra ny rakitra 'data/Mg1865.json'...")
