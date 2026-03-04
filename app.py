@@ -1,59 +1,40 @@
 import streamlit as st
 import json
+import os
 
-st.set_page_config(page_title="Baiboly Malagasy 1865", layout="wide")
+st.set_page_config(page_title="Baiboly 1865", layout="wide")
 
-def load_data(file_name):
+# Chemin vers ton nouveau dossier
+DATA_PATH = "data"
+
+def load_book(name):
     try:
-        with open(file_name, 'r', encoding='utf-8') as f:
+        with open(f"{DATA_PATH}/{name}.json", 'r', encoding='utf-8') as f:
             return json.load(f)
     except:
         return None
 
-bible_data = load_data('Bible_MG65.json')
-
 st.title("📖 Baiboly Malagasy 1865")
 
-if bible_data is None:
-    st.error("Tsy hita ny fichier 'Bible_MG65.json'.")
-    st.stop()
-
-# --- RECHERCHE DES LIVRES ---
-# Si le fichier commence par "database", on entre dedans
-if isinstance(bible_data, dict) and 'database' in bible_data:
-    base = bible_data['database']
-    # On cherche les livres à l'intérieur
-    livres_list = base.get('books', base if isinstance(base, list) else [])
-else:
-    livres_list = bible_data.get('books', bible_data if isinstance(bible_data, list) else [])
-
-# --- NAVIGATION ---
-try:
-    if not livres_list:
-        st.warning("Fichier vide ou mal lu.")
-        st.json(bible_data) # Pour voir la structure si ça rate
-        st.stop()
-
-    noms_livres = [b.get('name', f"Boky {i+1}") for i, b in enumerate(livres_list)]
-    livre_nom = st.sidebar.selectbox("Fidio ny boky", noms_livres)
+# On liste tous les fichiers .json dans le dossier 'data'
+if os.path.exists(DATA_PATH):
+    files = [f.replace('.json', '') for f in os.listdir(DATA_PATH) if f.endswith('.json')]
     
-    idx_livre = noms_livres.index(livre_nom)
-    data_livre = livres_list[idx_livre]
-
-    # Sélection du Chapitre
-    chaps = data_livre.get('chapters', [])
-    if chaps:
-        chap_list = [str(c.get('chapter', i+1)) for i, c in enumerate(chaps)]
-        chap_num = st.sidebar.selectbox("Toko", chap_list)
+    if files:
+        livre_choisi = st.sidebar.selectbox("Fidio ny boky", sorted(files))
+        data = load_book(livre_choisi)
         
-        idx_chap = chap_list.index(chap_num)
-        versets = chaps[idx_chap].get('verses', [])
-
-        st.header(f"{livre_nom} - Toko {chap_num}")
-        for v in versets:
-            st.write(f"**{v.get('verse', '')}.** {v.get('text', '')}")
+        if data:
+            # Navigation par chapitre
+            chaps = [str(i+1) for i in range(len(data['chapters']))]
+            chap_num = st.sidebar.selectbox("Toko", chaps)
+            
+            # Affichage
+            st.header(f"{livre_choisi} - Toko {chap_num}")
+            versets = data['chapters'][int(chap_num)-1]
+            for i, texte in enumerate(versets):
+                st.write(f"**{i+1}.** {texte}")
     else:
-        st.info("Tsy misy toko hita ato.")
-
-except Exception as e:
-    st.error(f"Olana : {e}")
+        st.info("Tsy misy boky hita ao amin'ny dossier 'data'. Ampidiro ao ny fichiers .json.")
+else:
+    st.error("Tsy hita ny dossier 'data'. Créer-o aloha io dossier io ao amin'ny GitHub.")
