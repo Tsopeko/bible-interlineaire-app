@@ -28,13 +28,16 @@ if os.path.exists(DATA_PATH):
         
         if bible_data:
             # 1. Mitady ny boky (Adaptive search)
+            # Ny JSON sasany dia manomboka amin'ny 'books', ny sasany mivantana amin'ny anaran'ny boky
             content = bible_data.get('books', bible_data)
+            
             if isinstance(content, dict):
                 books_list = list(content.keys())
                 book_name = st.sidebar.selectbox("Fidio ny boky", books_list)
                 
-                # 2. Mitady ny toko
-                chapters = content[book_name]
+                # 2. Mitady ny toko (Mitandrina amin'ny AttributeError)
+                chapters = content.get(book_name, {})
+                
                 if isinstance(chapters, dict):
                     ch_list = sorted([k for k in chapters.keys() if str(k).isdigit()], key=int)
                     if ch_list:
@@ -42,7 +45,7 @@ if os.path.exists(DATA_PATH):
                         st.header(f"{book_name} - Toko {ch_sel}")
                         
                         # 3. Mampiseho ny andininy
-                        verses = chapters[ch_sel]
+                        verses = chapters.get(ch_sel, {})
                         if isinstance(verses, dict):
                             v_list = sorted([v for v in verses.keys() if str(v).isdigit()], key=int)
                             for n in v_list:
@@ -56,12 +59,10 @@ if os.path.exists(DATA_PATH):
                                     for i, code in enumerate(strong_codes):
                                         if cols[i].button(f"🔍 {code}", key=f"{book_name}_{ch_sel}_{n}_{code}"):
                                             fn = "strongs-greek-dictionary.json" if code.startswith('G') else "strongs-hebrew-dictionary.json"
-                                            # Mitady ny diksionera eo akaikin'ny app.py
-                                            s_path = os.path.join(os.getcwd(), fn)
-                                            s_data = load_json(s_path)
+                                            s_data = load_json(fn) # Mitady eo akaikin'ny app.py
                                             if s_data and code in s_data:
                                                 st.info(f"**{code}:** {s_data[code]}")
             else:
-                st.error("Ny rafitra JSON dia tsy mifanaraka. Hamarino ny rakitrao.")
+                st.error("Ny rafitra JSON dia tsy mifanaraka amin'ny tokony ho izy.")
     else:
         st.warning("Ampidiro ao anaty dossier 'data' ny rakitra JSON-nao.")
