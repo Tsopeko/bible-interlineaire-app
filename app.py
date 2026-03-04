@@ -3,59 +3,60 @@ import json
 import os
 import re
 
-# 1. Fikirana fototra
+# 1. Fikirana fototra ny pejy
 st.set_page_config(page_title="Baiboly Malagasy 1865", layout="wide", page_icon="📖")
 
+# Dossier misy ny boky Baiboly
 DATA_PATH = "data"
 
-@st.cache_data
-def load_json_file(filename):
+# Fonction hikarakarana ny famakiana JSON (fisorohana ny Extra Data)
+def load_any_json(filename):
     if not os.path.exists(filename):
         return None
     try:
         with open(filename, 'r', encoding='utf-8') as f:
             content = f.read().strip()
-            # Raha misy JSON maromaro mifanesy (Extra data error fix)
-            if content.startswith('{') and content.count('}{') > 0:
-                # Maka ny {} voalohany fotsiny
-                first_obj = re.search(r'(\{.*?\})(?=\s*\{|$)', content, re.DOTALL)
-                if first_obj:
-                    return json.loads(first_obj.group(1))
+            # Raha misy JSON maromaro mifanesy (fix ho an'ny Extra Data)
+            if content.count('{') > 1:
+                # Mitady ny {} voalohany fotsiny
+                match = re.search(r'(\{.*?\})(?=\s*\{|$)', content, re.DOTALL)
+                if match:
+                    return json.loads(match.group(1))
             return json.loads(content)
-    except Exception as e:
+    except Exception:
         return None
 
 st.title("📖 Baiboly Malagasy 1865")
 
-# --- SIDEBAR: FIKIRANA SY DIKSIONERA ---
+# --- SIDEBAR (Sisiny) ---
 st.sidebar.header("⚙️ Fikirana")
-st.sidebar.info("Miasa ny fikarohana sy ny famakiana.")
+st.sidebar.info("Miasa ny fikarohana, ny famakiana, ary ny Strong.")
 
 # --- DICTIONNAIRE STRONG ---
 st.sidebar.divider()
 st.sidebar.header("📚 Diksionera Strong")
-strong_code = st.sidebar.text_input("Hampidiro ny code (ohatra: G2424 na H7225)")
+strong_input = st.sidebar.text_input("Hampidiro ny code (ohatra: G2424 na H7225)")
 
-if strong_code:
-    code_upper = strong_code.upper().strip()
-    is_greek = code_upper.startswith('G')
-    dict_filename = "strongs-greek-dictionary.json" if is_greek else "strongs-hebrew-dictionary.json"
+if strong_input:
+    code = strong_input.upper().strip()
+    # Mamaritra ny fichier ho vakiana
+    dict_file = "strongs-greek-dictionary.json" if code.startswith('G') else "strongs-hebrew-dictionary.json"
     
-    strong_data = load_json_file(dict_filename)
+    strong_data = load_any_json(dict_file)
     
-    if strong_data and code_upper in strong_data:
-        info = strong_data[code_upper]
+    if strong_data and code in strong_data:
+        info = strong_data[code]
         st.markdown("---")
-        st.header(f"🔍 Strong {code_upper}")
+        st.header(f"🔍 Diksionera: {code}")
         
         if isinstance(info, dict):
-            # Mampiseho izay rehetra ao anaty JSON na inona na inona anarany
-            for key, value in info.items():
-                st.write(f"**{key.capitalize()}:** {value}")
+            # Mampiseho ny antsipiriany rehetra hita ao anaty JSON
+            for k, v in info.items():
+                st.write(f"**{k.capitalize()}:** {v}")
         else:
             st.write(str(info))
     else:
-        st.sidebar.error(f"Tsy hita ny code {code_upper} na ny fichier.")
+        st.sidebar.error(f"Tsy hita ny code {code} na ny fichier {dict_file}")
 
 st.sidebar.divider()
 
@@ -70,35 +71,35 @@ if mot_cle:
         
     found_count = 0
     if os.path.exists(DATA_PATH):
-        files = sorted([f for f in os.listdir(DATA_PATH) if f.endswith('.json')])
-        for file_name in files:
-            book_name = file_name.replace('.json', '')
-            book_data = load_json_file(f"{DATA_PATH}/{file_name}")
-            if book_data:
-                for chap_num, versets in book_data.items():
+        books = sorted([f for f in os.listdir(DATA_PATH) if f.endswith('.json')])
+        for b_file in books:
+            b_name = b_file.replace('.json', '')
+            b_data = load_any_json(f"{DATA_PATH}/{b_file}")
+            if b_data:
+                for chap, versets in b_data.items():
                     if isinstance(versets, dict):
                         for v_num, txt in versets.items():
                             if mot_cle.lower() in txt.lower():
-                                st.write(f"**{book_name} {chap_num}:{v_num}**")
+                                st.write(f"**{b_name} {chap}:{v_num}**")
                                 st.write(txt)
                                 st.divider()
                                 found_count += 1
     st.sidebar.info(f"Verset {found_count} no hita.")
-    st.stop() 
+    st.stop()
 
 # --- LECTURE NORMALE ---
 if os.path.exists(DATA_PATH):
     files = sorted([f.replace('.json', '') for f in os.listdir(DATA_PATH) if f.endswith('.json')])
     if files:
-        livre_choisi = st.sidebar.selectbox("Fidio ny boky", files)
-        data = load_json_file(f"{DATA_PATH}/{livre_choisi}.json")
+        livre = st.sidebar.selectbox("Fidio ny boky", files)
+        data = load_any_json(f"{DATA_PATH}/{livre}.json")
         if data:
-            toko_keys = sorted([k for k in data.keys() if k.isdigit()], key=int)
-            if toko_keys:
-                chap_num = st.sidebar.selectbox("Toko", toko_keys)
-                st.subheader(f"{livre_choisi} - Toko {chap_num}")
+            toko_list = sorted([k for k in data.keys() if k.isdigit()], key=int)
+            if toko_list:
+                toko_choisi = st.sidebar.selectbox("Toko", toko_list)
+                st.subheader(f"{livre} - Toko {toko_choisi}")
                 
-                versets_dict = data[chap_num]
-                v_keys = sorted([v for v in versets_dict.keys() if v.isdigit()], key=int)
-                for v_num in v_keys:
-                    st.write(f"**{v_num}.** {versets_dict[v_num]}")
+                versets = data[toko_choisi]
+                v_list = sorted([v for v in versets.keys() if v.isdigit()], key=int)
+                for v_num in v_list:
+                    st.write(f"**{v_num}.** {versets[v_num]}")
