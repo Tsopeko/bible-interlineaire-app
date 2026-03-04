@@ -14,12 +14,10 @@ def load_json(path):
         with open(path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
-        st.error(f"Fahadisoana tamin'ny famakiana: {e}")
         return None
 
 st.title("📖 Baiboly Malagasy Interlineaire")
 
-# --- LECTURE ---
 if os.path.exists(DATA_PATH):
     files = [f for f in os.listdir(DATA_PATH) if f.endswith('.json')]
     if files:
@@ -27,20 +25,16 @@ if os.path.exists(DATA_PATH):
         bible_data = load_json(os.path.join(DATA_PATH, selected_file))
         
         if bible_data:
-            # ADAPTER HO AN'NY RAFIKRA MAVESATRA (SQL-TO-JSON FORMAT)
-            # Raha mivoaka ny 'type', 'name', 'objects', dia ao anaty 'objects' ny andininy
+            organized = {}
+            # Raha format SQL-to-JSON (misy 'objects')
             if isinstance(bible_data, dict) and 'objects' in bible_data:
-                # Eto no misy ny andininy rehetra
-                raw_verses = bible_data['objects']
-                
-                # Alahatra isaky ny boky, toko, andininy
-                organized = {}
-                for entry in raw_verses:
-                    # Ireto anarana ireto dia miankina amin'ny rakitra anananao (matetika 'book', 'chapter', 'verse')
-                    b = entry.get('book_name', entry.get('book', 'Baiboly'))
-                    c = str(entry.get('chapter', '1'))
-                    v = str(entry.get('verse', '1'))
-                    t = entry.get('text', entry.get('content', '...'))
+                for entry in bible_data['objects']:
+                    # Mitady ny anaran'ny boky, toko, ary andininy na inona na inona anarany
+                    b = str(entry.get('book_name', entry.get('book', 'Baiboly')))
+                    c = str(entry.get('chapter_number', entry.get('chapter', '1')))
+                    v = str(entry.get('verse_number', entry.get('verse', '1')))
+                    # Eto no manan-danja: mitady ny 'text' na 'content' na 'body'
+                    t = entry.get('text', entry.get('content', entry.get('body', '...')))
                     
                     if b not in organized: organized[b] = {}
                     if c not in organized[b]: organized[b][c] = {}
@@ -49,7 +43,6 @@ if os.path.exists(DATA_PATH):
             else:
                 bible_content = bible_data.get('books', bible_data)
 
-            # Fampisehoana ny andininy
             if isinstance(bible_content, dict):
                 books_list = sorted(list(bible_content.keys()))
                 book_name = st.sidebar.selectbox("Fidio ny boky", books_list)
@@ -75,8 +68,9 @@ if os.path.exists(DATA_PATH):
                             for i, code in enumerate(strong_codes):
                                 if cols[i].button(f"🔍 {code}", key=f"{book_name}_{ch_sel}_{n}_{code}"):
                                     fn = "strongs-greek-dictionary.json" if code.startswith('G') else "strongs-hebrew-dictionary.json"
+                                    # Mitady ny diksionera eo amin'ny faka (root)
                                     s_data = load_json(fn)
                                     if s_data and code in s_data:
                                         st.info(f"**{code}:** {s_data[code]}")
-    else:
-        st.warning("Ampidiro ny rakitra JSON ao anaty dossier 'data'.")
+            else:
+                st.error("Tsy azo vakiana ny rafitra JSON.")
