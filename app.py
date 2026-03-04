@@ -2,7 +2,7 @@ import streamlit as st
 import json
 import os
 
-st.set_page_config(page_title="Baiboly 1865 - Karoka", layout="wide", page_icon="🔍")
+st.set_page_config(page_title="Baiboly 1865", layout="wide", page_icon="📖")
 
 DATA_PATH = "data"
 
@@ -16,9 +16,16 @@ def load_book(name):
 
 st.title("📖 Baiboly Malagasy 1865")
 
-# --- BARRE DE RECHERCHE ---
+# --- PARAMÈTRES D'AFFICHAGE (SideBar) ---
+st.sidebar.header("⚙️ Fikirana")
+# Curseur pour la taille du texte
+taille_texte = st.sidebar.slider("Haben'ny soratra", 12, 30, 18)
+
+st.sidebar.divider()
+
+# --- MOTEUR DE RECHERCHE ---
 st.sidebar.header("🔍 Karoka")
-mot_cle = st.sidebar.text_input("Hikaroka teny (ohatra: Jesosy)")
+mot_cle = st.sidebar.text_input("Hikaroka teny")
 
 if mot_cle:
     st.header(f"Valin'ny karoka: '{mot_cle}'")
@@ -35,15 +42,13 @@ if mot_cle:
                 if isinstance(versets, dict):
                     for v_num, txt in versets.items():
                         if mot_cle.lower() in txt.lower():
-                            # Affichage stylisé du résultat
-                            st.markdown(f"**{file} {chap_num}:{v_num}**")
-                            st.info(txt)
+                            # Affichage avec la taille choisie
+                            st.markdown(f"<p style='font-size:{taille_texte}px;'><b>{file} {chap_num}:{v_num}</b><br>{txt}</p>", unsafe_html=True)
+                            st.divider()
                             found_count += 1
-    
-    st.sidebar.write(f"Verset {found_count} no hita.")
     st.stop() 
 
-# --- AFFICHAGE LECTURE (Normal) ---
+# --- LECTURE NORMALE ---
 if os.path.exists(DATA_PATH):
     files = sorted([f.replace('.json', '') for f in os.listdir(DATA_PATH) if f.endswith('.json')])
     if files:
@@ -54,7 +59,13 @@ if os.path.exists(DATA_PATH):
             if toko_keys:
                 chap_num = st.sidebar.selectbox("Toko", toko_keys)
                 st.subheader(f"{livre_choisi} - Toko {chap_num}")
+                
                 versets_dict = data[chap_num]
                 v_keys = sorted([v for v in versets_dict.keys() if v.isdigit()], key=int)
+                
+                # Affichage des versets avec style HTML pour la taille
                 for v_num in v_keys:
-                    st.write(f"**{v_num}.** {versets_dict[v_num]}")
+                    txt_verset = versets_dict[v_num]
+                    st.markdown(f"<span style='font-size:{taille_texte}px;'><b>{v_num}.</b> {txt_verset}</span>", unsafe_html=True)
+    else:
+        st.info("Ampidiro ao anatin'ny dossier 'data' ireo fichiers .json")
