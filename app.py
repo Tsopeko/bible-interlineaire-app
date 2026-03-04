@@ -1,8 +1,9 @@
 import streamlit as st
 import json
 import os
+import re
 
-st.set_page_config(page_title="Baiboly Interlineaire", layout="wide")
+st.set_page_config(page_title="Baiboly Interlineaire", layout="wide", page_icon="📖")
 
 DATA_PATH = "data"
 
@@ -12,7 +13,9 @@ def load_json(path):
     try:
         with open(path, 'r', encoding='utf-8') as f:
             return json.load(f)
-    except: return None
+    except Exception as e:
+        st.error(f"Tsy azo novakiana ilay fichier: {e}")
+        return None
 
 st.title("📖 Baiboly Malagasy Interlineaire")
 
@@ -24,25 +27,21 @@ if os.path.exists(DATA_PATH):
         bible_data = load_json(os.path.join(DATA_PATH, selected_file))
         
         if bible_data:
-            # MITADY NY VOTOATINY (Finding where the books are)
-            # Ny Mg1865 dia matetika manana 'books' na 'content'
-            if isinstance(bible_data, dict) and 'books' in bible_data:
-                bible_content = bible_data['books']
-            else:
-                bible_content = bible_data
-
-            if isinstance(bible_content, dict):
-                books_list = list(bible_content.keys())
-                book_name = st.sidebar.selectbox("Boky", books_list)
+            # 1. Mitady ny boky (Adaptive search)
+            content = bible_data.get('books', bible_data)
+            if isinstance(content, dict):
+                books_list = list(content.keys())
+                book_name = st.sidebar.selectbox("Fidio ny boky", books_list)
                 
-                chapters = bible_content[book_name]
-                
+                # 2. Mitady ny toko
+                chapters = content[book_name]
                 if isinstance(chapters, dict):
                     ch_list = sorted([k for k in chapters.keys() if str(k).isdigit()], key=int)
                     if ch_list:
                         ch_sel = st.sidebar.selectbox("Toko", ch_list)
                         st.header(f"{book_name} - Toko {ch_sel}")
                         
+                        # 3. Mampiseho ny andininy
                         verses = chapters[ch_sel]
                         if isinstance(verses, dict):
                             v_list = sorted([v for v in verses.keys() if str(v).isdigit()], key=int)
@@ -50,18 +49,19 @@ if os.path.exists(DATA_PATH):
                                 txt = str(verses[n])
                                 st.write(f"**{n}.** {txt}")
                                 
-                                # Fikarohana Strong
-                                import re
-                                codes = re.findall(r'[GH]\d+', txt)
-                                if codes:
-                                    cols = st.columns(len(codes))
-                                    for i, c in enumerate(codes):
-                                        if cols[i].button(f"🔍 {c}", key=f"{book_name}_{ch_sel}_{n}_{c}"):
-                                            fn = "strongs-greek-dictionary.json" if c.startswith('G') else "strongs-hebrew-dictionary.json"
-                                            s_data = load_json(fn)
-                                            if s_data and c in s_data:
-                                                st.info(f"**{c}:** {s_data[c]}")
+                                # 4. Fikarohana Strong (Interlineaire)
+                                strong_codes = re.findall(r'[GH]\d+', txt)
+                                if strong_codes:
+                                    cols = st.columns(len(strong_codes))
+                                    for i, code in enumerate(strong_codes):
+                                        if cols[i].button(f"🔍 {code}", key=f"{book_name}_{ch_sel}_{n}_{code}"):
+                                            fn = "strongs-greek-dictionary.json" if code.startswith('G') else "strongs-hebrew-dictionary.json"
+                                            # Mitady ny diksionera eo akaikin'ny app.py
+                                            s_path = os.path.join(os.getcwd(), fn)
+                                            s_data = load_json(s_path)
+                                            if s_data and code in s_data:
+                                                st.info(f"**{code}:** {s_data[code]}")
             else:
-                st.error("Tsy azo vakiana ny rafitra ao anatin'ity JSON ity.")
+                st.error("Ny rafitra JSON dia tsy mifanaraka. Hamarino ny rakitrao.")
     else:
         st.warning("Ampidiro ao anaty dossier 'data' ny rakitra JSON-nao.")
