@@ -33,8 +33,7 @@ if os.path.exists(DATA_PATH):
                     b = str(entry.get('book_name', entry.get('book', 'Baiboly')))
                     c = str(entry.get('chapter', entry.get('chapter_number', '1')))
                     v = str(entry.get('verse', entry.get('verse_number', '1')))
-                    # MITADY NY SORATRA (Eto no misy ny fanovana lehibe)
-                    # Mitady 'text', 'content', 'body', na 'verse_text'
+                    # MITADY NY SORATRA: mitady 'text', 'content', 'body', na 'verse_text'
                     t = entry.get('text', entry.get('content', entry.get('body', entry.get('verse_text', '...'))))
                     
                     if b not in organized: organized[b] = {}
@@ -69,7 +68,7 @@ if os.path.exists(DATA_PATH):
                             for i, code in enumerate(strong_codes):
                                 if cols[i].button(f"🔍 {code}", key=f"{book_name}_{ch_sel}_{n}_{code}"):
                                     fn = "strongs-greek-dictionary.json" if code.startswith('G') else "strongs-hebrew-dictionary.json"
-                                    s_data = load_json(fn) # Mitady eo amin'ny faka (root)
+                                    s_data = load_json(fn)
                                     if s_data and code in s_data:
                                         st.info(f"**{code}:** {s_data[code]}")
     else:
