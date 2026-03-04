@@ -2,7 +2,7 @@ import streamlit as st
 import json
 import os
 
-st.set_page_config(page_title="Test Baiboly 1865", layout="wide")
+st.set_page_config(page_title="Baiboly 1865", layout="wide")
 
 DATA_PATH = "data"
 
@@ -23,22 +23,26 @@ if os.path.exists(DATA_PATH):
         data = load_book(livre_choisi)
         
         if data:
-            # --- DÉTECTION AUTOMATIQUE DES CHAPITRES ---
-            # On cherche si les chapitres sont dans 'chapters' ou si le fichier est une liste directe
-            chapters_data = data.get('chapters', data if isinstance(data, list) else [])
-            
-            if chapters_data:
-                nb_chaps = len(chapters_data)
+            # Recherche automatique des chapitres
+            # On regarde si c'est une liste directe ou s'il y a une clé 'chapters'
+            if isinstance(data, list):
+                chapters_list = data
+            elif isinstance(data, dict):
+                chapters_list = data.get('chapters', data.get('toko', []))
+            else:
+                chapters_list = []
+
+            if chapters_list:
+                nb_chaps = len(chapters_list)
                 chap_num = st.sidebar.number_input("Toko", 1, nb_chaps, 1)
                 
                 st.header(f"{livre_choisi} - Toko {chap_num}")
-                st.divider()
                 
-                # Récupération des versets du chapitre choisi
-                versets = chapters_data[chap_num - 1]
+                # Récupération des versets
+                versets = chapters_list[chap_num - 1]
                 
-                # Si les versets sont des dictionnaires (avec 'text'), on les extrait
                 for i, v in enumerate(versets):
+                    # Si le verset est un dictionnaire {"text": "..."} ou juste du texte
                     txt = v.get('text', v) if isinstance(v, dict) else v
                     st.write(f"**{i+1}.** {txt}")
             else:
