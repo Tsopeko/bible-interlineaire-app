@@ -1,51 +1,31 @@
 import streamlit as st
+import json
 
-# Configuration de la page
-st.set_page_config(page_title="Bible Interlinéaire Multi", layout="wide")
+st.set_page_config(page_title="Ma Bible Interlinéaire", layout="wide")
 
-# Simulation d'une base de données de versets
-# Dans un projet réel, vous chargeriez ceci depuis un fichier JSON ou SQL
-bible_data = {
-    "Genèse 1:1": {
-        "hebrew": ["בְּרֵאשִׁית", "בָּרָא", "אֱלֹהִים", "אֵת", "הַשָּׁמַיִם", "וְאֵת", "הָאָרֶץ"],
-        "strongs": ["H7225", "H1254", "H430", "H853", "H8064", "H853", "H776"],
-        "french": "Au commencement, Dieu créa les cieux et la terre.",
-        "english": "In the beginning, God created the heavens and the earth.",
-        "malagasy": "Tamin'ny voalohany Andriamanitra nahary ny lanitra sy ny tany."
-    }
-}
+# Charger les données depuis le fichier JSON
+with open('bible_data.json', 'r', encoding='utf-8') as f:
+    bible_data = json.load(f)
 
-st.title("📖 Application Biblique Interlinéaire")
+st.title("📖 Ma Bible Interlinéaire")
 
-# Barre latérale pour la navigation
-st.sidebar.header("Navigation")
-livre = st.sidebar.selectbox("Livre", ["Genèse", "Exode"])
-verset_key = "Genèse 1:1" # Simplifié pour l'exemple
+# Sélection du verset
+verset_key = st.sidebar.selectbox("Choisir un verset", list(bible_data.keys()))
 
-st.subheader(f"Traduction : {verset_key}")
+data = bible_data[verset_key]
 
-# Affichage Interlinéaire (Hébreu + Strongs)
-st.write("### Texte Source (Hébreu & Strongs)")
-cols = st.columns(len(bible_data[verset_key]["hebrew"]))
+st.subheader(f"Texte : {verset_key}")
 
-# L'Hébreu se lit de droite à gauche (RTL)
-words = bible_data[verset_key]["hebrew"]
-strongs = bible_data[verset_key]["strongs"]
-
+# Affichage Interlinéaire
+cols = st.columns(len(data["hebrew"]))
 for i, col in enumerate(cols):
     with col:
-        st.markdown(f"**{words[i]}**")
-        if st.button(strongs[i], key=f"btn_{i}"):
-            st.info(f"Dictionnaire : Définition pour {strongs[i]}")
+        st.markdown(f"### {data['hebrew'][i]}")
+        st.caption(data['strongs'][i])
 
 st.divider()
 
-# Affichage des versions
-st.write("### Traductions")
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.info("**Français**\n\n" + bible_data[verset_key]["french"])
-with col2:
-    st.success("**English**\n\n" + bible_data[verset_key]["english"])
-with col3:
-    st.warning("**Malagasy (1865)**\n\n" + bible_data[verset_key]["malagasy"])
+# Affichage des langues
+st.write(f"**Français:** {data['french']}")
+st.write(f"**English:** {data['english']}")
+st.write(f"**Malagasy (1865):** {data['malagasy']}")
