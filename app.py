@@ -26,14 +26,13 @@ if os.path.exists(DATA_PATH):
         
         if bible_data:
             organized = {}
-            # Raha format SQL-to-JSON (misy 'objects')
+            # Raha format mavesatra (misy 'objects')
             if isinstance(bible_data, dict) and 'objects' in bible_data:
                 for entry in bible_data['objects']:
-                    # Mitady ny anaran'ny boky, toko, ary andininy na inona na inona anarany
                     b = str(entry.get('book_name', entry.get('book', 'Baiboly')))
-                    c = str(entry.get('chapter_number', entry.get('chapter', '1')))
-                    v = str(entry.get('verse_number', entry.get('verse', '1')))
-                    # Eto no manan-danja: mitady ny 'text' na 'content' na 'body'
+                    c = str(entry.get('chapter', entry.get('chapter_number', '1')))
+                    v = str(entry.get('verse', entry.get('verse_number', '1')))
+                    # Mitady ny soratra (text/content/body)
                     t = entry.get('text', entry.get('content', entry.get('body', '...')))
                     
                     if b not in organized: organized[b] = {}
@@ -68,7 +67,7 @@ if os.path.exists(DATA_PATH):
                             for i, code in enumerate(strong_codes):
                                 if cols[i].button(f"🔍 {code}", key=f"{book_name}_{ch_sel}_{n}_{code}"):
                                     fn = "strongs-greek-dictionary.json" if code.startswith('G') else "strongs-hebrew-dictionary.json"
-                                    # Mitady ny diksionera eo amin'ny faka (root)
+                                    # Load dictionary from root folder
                                     s_data = load_json(fn)
                                     if s_data and code in s_data:
                                         st.info(f"**{code}:** {s_data[code]}")
