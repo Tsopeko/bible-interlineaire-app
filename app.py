@@ -13,49 +13,29 @@ def load_json(path):
 st.title("📖 Baiboly Mg1865 Interlineaire")
 
 # 1. Load Bible
-bible_data = load_json("data/Mg1865.json")
+data = load_json("data/Mg1865.json")
 
-if bible_data:
-    # --- DINGANA 1: Mitady ny toerana misy ny boky ---
-    # Raha misy 'books', 'vaka', na 'metadata' ny JSON
-    if isinstance(bible_data, dict):
-        if 'books' in bible_data:
-            content = bible_data['books']
-        else:
-            content = bible_data
-    else:
-        st.error("Ny JSON dia 'List' fa tsy 'Dictionary'. Avereno jerena ny format.")
-        st.stop()
-
-    # --- DINGANA 2: Safidy Boky sy Toko ---
+if data and "objects" in data:
+    # Araka ny sary 5db10129, ny angon-drakitra dia ao amin'ny objects -> rows
     try:
-        books = sorted(list(content.keys()))
-        book_sel = st.sidebar.selectbox("Boky", books)
+        # Mitady ny table misy ny Baiboly (matetika ilay misy andininy)
+        # Ity dia maka ny 'rows' avy amin'ny table voalohany ao amin'ny 'objects'
+        bible_rows = data["objects"][0]["rows"] 
         
-        chapters = content[book_sel]
-        ch_list = sorted(list(chapters.keys()), key=lambda x: int(x) if str(x).isdigit() else 0)
-        ch_sel = st.sidebar.selectbox("Toko", ch_list)
+        # Alahatra ny boky misy
+        # Ny 'row' tsirairay dia misy [book_number, chapter, verse, text] na mitovitovy amin'izany
+        # Mila fantarina ny anaran'ny boky avy amin'ny 'book_number'
         
-        # --- DINGANA 3: Fampisehoana ---
-        st.subheader(f"{book_sel} - Toko {ch_sel}")
-        verses = chapters[ch_sel]
+        st.success("Tafiditra ny rakitra 8.46 MB!")
+        st.write("Fanamarihana: Ny rakitrao dia 'Database Export'.")
         
-        for v_num in sorted(verses.keys(), key=lambda x: int(x) if str(x).isdigit() else 0):
-            txt = verses[v_num]
-            st.write(f"**{v_num}.** {txt}")
-            
-            # Strong buttons
-            codes = re.findall(r'[GH]\d+', txt)
-            if codes:
-                cols = st.columns(len(codes))
-                for i, c in enumerate(codes):
-                    if cols[i].button(f"🔍 {c}", key=f"{ch_sel}_{v_num}_{c}"):
-                        fn = "strongs-greek-dictionary.json" if c.startswith('G') else "strongs-hebrew-dictionary.json"
-                        s_data = load_json(fn)
-                        if s_data:
-                            st.info(f"**{c}:** {s_data.get(c, 'Tsy hita')}")
+        # Ity ampahany ity dia mampiseho ny andalana 10 voalohany mba hahitantsika ny firafitry ny andininy
+        st.write("Ireo andalana vitsy voalohany ao amin'ny rows:")
+        st.json(bible_rows[:3]) 
+        
+        st.info("Rehefa hitantsika ny anaran'ny 'columns' (ohatra: 'text' na 'content'), dia hamboarintsika ny fampisehoana azy.")
+        
     except Exception as e:
-        st.error(f"Nisy olana teo am-pamakiana ny rafitra: {e}")
-        st.write("Andramo jerena ny 'Raw' an'ny JSON-nao ao amin'ny GitHub.")
+        st.error(f"Tsy mifanaraka ny rafitra: {e}")
 else:
-    st.warning("Tsy hita ny rakitra 'data/Mg1865.json'")
+    st.warning("Tsy hita ny rakitra na diso ny format JSON.")
