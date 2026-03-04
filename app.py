@@ -1,42 +1,34 @@
 import streamlit as st
 import json
 
-st.set_page_config(page_title="Bible Interlinéaire Pro", layout="wide")
+st.set_page_config(page_title="Baiboly Malagasy 1865", layout="wide")
 
-# Chargement des fichiers
-with open('bible_data.json', 'r', encoding='utf-8') as f:
-    bible_data = json.load(f)
-
-# On essaie de charger le dictionnaire s'il existe
+# On charge le gros fichier Malagasy
 try:
-    with open('dictionnaire.json', 'r', encoding='utf-8') as f:
-        dict_data = json.load(f)
-except:
-    dict_data = {}
+    with open('Bible_MG65.json', 'r', encoding='utf-8') as f:
+        bible_complete = json.load(f)
+except FileNotFoundError:
+    st.error("Erreur : Le fichier Bible_MG65.json est introuvable sur GitHub.")
+    st.stop()
 
-st.title("📖 Bible Interlinéaire & Dictionnaire")
+st.title("📖 Baiboly Malagasy 1865")
 
-verset_key = st.sidebar.selectbox("Choisir un verset", list(bible_data.keys()))
-data = bible_data[verset_key]
+# 1. Sélection du Livre
+livres = [b['name'] for b in bible_complete['books']]
+livre_nom = st.sidebar.selectbox("Fidio ny boky (Livre)", livres)
 
-# Affichage Interlinéaire
-st.write("### Analyse du texte original")
-cols = st.columns(len(data["hebrew"]))
+# Trouver le livre sélectionné
+livre_data = next(b for b in bible_complete['books'] if b['name'] == livre_nom)
 
-for i, col in enumerate(cols):
-    strong_code = data["strongs"][i]
-    with col:
-        st.subheader(data["hebrew"][i])
-        
-        # Bouton Dictionnaire
-        if strong_code in dict_data:
-            with st.popover(strong_code):
-                st.write(f"**Mot:** {dict_data[strong_code]['mot']}")
-                st.write(f"**Définition:** {dict_data[strong_code]['definition']}")
-                st.caption(f"Origine: {dict_data[strong_code]['origine']}")
-        else:
-            st.caption(strong_code)
+# 2. Sélection du Chapitre
+chapitres = [c['chapter'] for c in livre_data['chapters']]
+chap_num = st.sidebar.selectbox("Fidio ny toko (Chapitre)", chapitres)
 
-st.divider()
-st.write(f"**Français:** {data['french']}")
-st.write(f"**Malagasy:** {data['malagasy']}")
+# Trouver le chapitre sélectionné
+chap_data = next(c for c in livre_data['chapters'] if c['chapter'] == chap_num)
+
+# Affichage des versets
+st.subheader(f"{livre_nom} Toko {chap_num}")
+
+for v in chap_data['verses']:
+    st.write(f"**{v['verse']}.** {v['text']}")
