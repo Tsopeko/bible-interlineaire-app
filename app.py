@@ -2,7 +2,7 @@ import streamlit as st
 import json
 import os
 
-# Fikirana fototra
+# Fikirana fototra ny pejy
 st.set_page_config(page_title="Baiboly Malagasy 1865", layout="wide", page_icon="📖")
 
 DATA_PATH = "data"
@@ -19,7 +19,8 @@ st.title("📖 Baiboly Malagasy 1865")
 
 # --- PARAMÈTRES D'AFFICHAGE (SideBar) ---
 st.sidebar.header("⚙️ Fikirana")
-taille_texte = st.sidebar.slider("Haben'ny soratra", 12, 36, 18)
+# Ity ny slider hanovana ny haben'ny soratra
+taille_texte = st.sidebar.slider("Haben'ny soratra", 14, 40, 20)
 
 st.sidebar.divider()
 
@@ -43,12 +44,11 @@ if mot_cle:
                     if isinstance(versets, dict):
                         for v_num, txt in versets.items():
                             if mot_cle.lower() in txt.lower():
-                                # Eto no nisy diso teo (namboarina)
-                                st.markdown(f'<div style="font-size:{taille_texte}px;"><b>{file} {chap_num}:{v_num}</b><br>{txt}</div>', unsafe_html=True)
-                                st.divider()
+                                # Fampisehoana ny vokatry ny karoka miaraka amin'ny habe voafidy
+                                st.markdown(f'<div style="font-size:{taille_texte}px; border-left: 3px solid #ff4b4b; padding-left: 10px; margin-bottom: 20px;"><b>{file} {chap_num}:{v_num}</b><br>{txt}</div>', unsafe_html=True)
                                 found_count += 1
     
-    st.sidebar.write(f"Verset {found_count} no hita.")
+    st.sidebar.info(f"Verset {found_count} no hita.")
     st.stop() 
 
 # --- LECTURE NORMALE ---
@@ -66,11 +66,13 @@ if os.path.exists(DATA_PATH):
                 versets_dict = data[chap_num]
                 v_keys = sorted([v for v in versets_dict.keys() if v.isdigit()], key=int)
                 
-                # Fampisehoana ny versets miaraka amin'ny habe voafidy
+                # Ity no mampiseho ny andininy tsirairay amin'ny habe mety
                 for v_num in v_keys:
                     txt_verset = versets_dict[v_num]
-                    # Fampiasana <div> sy f-string madio
-                    st.markdown(f'<div style="font-size:{taille_texte}px; margin-bottom:10px;"><b>{v_num}.</b> {txt_verset}</div>', unsafe_html=True)
+                    # Nampiana <div> HTML mba ho afaka ovaina ny font-size
+                    st.markdown(f'<div style="font-size:{taille_texte}px; margin-bottom:12px; line-height: 1.6;"><b>{v_num}.</b> {txt_verset}</div>', unsafe_html=True)
+            else:
+                st.warning("Tsy hita ny toko ato amin'ity boky ity.")
     else:
         st.info("Ampidiro ao anatin'ny dossier 'data' ireo fichiers .json")
 else:
