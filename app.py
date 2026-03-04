@@ -44,7 +44,7 @@ if mot_cle:
                     if isinstance(versets, dict):
                         for v_num, txt in versets.items():
                             if mot_cle.lower() in txt.lower():
-                                # Fampisehoana ny vokatry ny karoka miaraka amin'ny habe voafidy
+                                # Fampisehoana ny vokatry ny karoka
                                 st.markdown(f'<div style="font-size:{taille_texte}px; border-left: 3px solid #ff4b4b; padding-left: 10px; margin-bottom: 20px;"><b>{file} {chap_num}:{v_num}</b><br>{txt}</div>', unsafe_html=True)
                                 found_count += 1
     
@@ -66,11 +66,12 @@ if os.path.exists(DATA_PATH):
                 versets_dict = data[chap_num]
                 v_keys = sorted([v for v in versets_dict.keys() if v.isdigit()], key=int)
                 
-                # Ity no mampiseho ny andininy tsirairay amin'ny habe mety
+                # Fampisehoana ny andininy tsirairay
                 for v_num in v_keys:
                     txt_verset = versets_dict[v_num]
-                    # Nampiana <div> HTML mba ho afaka ovaina ny font-size
-                    st.markdown(f'<div style="font-size:{taille_texte}px; margin-bottom:12px; line-height: 1.6;"><b>{v_num}.</b> {txt_verset}</div>', unsafe_html=True)
+                    # Ampiasaina ny f-string miaraka amin'ny fonon-tselatra (curly braces) mazava
+                    html_code = f'<div style="font-size:{taille_texte}px; margin-bottom:12px; line-height: 1.6;"><b>{v_num}.</b> {txt_verset}</div>'
+                    st.markdown(html_code, unsafe_html=True)
             else:
                 st.warning("Tsy hita ny toko ato amin'ity boky ity.")
     else:
