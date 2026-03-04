@@ -31,10 +31,7 @@ if strong_code:
     is_greek = strong_code.upper().startswith('G')
     is_hebrew = strong_code.upper().startswith('H')
     
-    dict_file = "strongs-greek-dictionary" if is_greek else "strongs-hebrew-dictionary"
-    
-    # Manala ny litera mba hahazoana ny isa fotsiny raha ilaina amin'ny fikarohana
-    clean_code = strong_code.upper()
+    dict_file = "strongs-greek-dictionary.json" if is_greek else "strongs-hebrew-dictionary.json"
     
     try:
         with open(f"{dict_file}.json", 'r', encoding='utf-8') as f:
