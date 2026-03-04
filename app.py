@@ -2,7 +2,8 @@ import streamlit as st
 import json
 import os
 
-st.set_page_config(page_title="Baiboly 1865", layout="wide", page_icon="📖")
+# Fikirana fototra
+st.set_page_config(page_title="Baiboly Malagasy 1865", layout="wide", page_icon="📖")
 
 DATA_PATH = "data"
 
@@ -18,8 +19,7 @@ st.title("📖 Baiboly Malagasy 1865")
 
 # --- PARAMÈTRES D'AFFICHAGE (SideBar) ---
 st.sidebar.header("⚙️ Fikirana")
-# Curseur pour la taille du texte
-taille_texte = st.sidebar.slider("Haben'ny soratra", 12, 30, 18)
+taille_texte = st.sidebar.slider("Haben'ny soratra", 12, 36, 18)
 
 st.sidebar.divider()
 
@@ -33,19 +33,22 @@ if mot_cle:
         st.rerun()
         
     found_count = 0
-    files = sorted([f.replace('.json', '') for f in os.listdir(DATA_PATH) if f.endswith('.json')])
+    if os.path.exists(DATA_PATH):
+        files = sorted([f.replace('.json', '') for f in os.listdir(DATA_PATH) if f.endswith('.json')])
+        
+        for file in files:
+            book_data = load_book(file)
+            if book_data:
+                for chap_num, versets in book_data.items():
+                    if isinstance(versets, dict):
+                        for v_num, txt in versets.items():
+                            if mot_cle.lower() in txt.lower():
+                                # Eto no nisy diso teo (namboarina)
+                                st.markdown(f'<div style="font-size:{taille_texte}px;"><b>{file} {chap_num}:{v_num}</b><br>{txt}</div>', unsafe_html=True)
+                                st.divider()
+                                found_count += 1
     
-    for file in files:
-        book_data = load_book(file)
-        if book_data:
-            for chap_num, versets in book_data.items():
-                if isinstance(versets, dict):
-                    for v_num, txt in versets.items():
-                        if mot_cle.lower() in txt.lower():
-                            # Affichage avec la taille choisie
-                            st.markdown(f"<p style='font-size:{taille_texte}px;'><b>{file} {chap_num}:{v_num}</b><br>{txt}</p>", unsafe_html=True)
-                            st.divider()
-                            found_count += 1
+    st.sidebar.write(f"Verset {found_count} no hita.")
     st.stop() 
 
 # --- LECTURE NORMALE ---
@@ -63,9 +66,12 @@ if os.path.exists(DATA_PATH):
                 versets_dict = data[chap_num]
                 v_keys = sorted([v for v in versets_dict.keys() if v.isdigit()], key=int)
                 
-                # Affichage des versets avec style HTML pour la taille
+                # Fampisehoana ny versets miaraka amin'ny habe voafidy
                 for v_num in v_keys:
                     txt_verset = versets_dict[v_num]
-                    st.markdown(f"<span style='font-size:{taille_texte}px;'><b>{v_num}.</b> {txt_verset}</span>", unsafe_html=True)
+                    # Fampiasana <div> sy f-string madio
+                    st.markdown(f'<div style="font-size:{taille_texte}px; margin-bottom:10px;"><b>{v_num}.</b> {txt_verset}</div>', unsafe_html=True)
     else:
         st.info("Ampidiro ao anatin'ny dossier 'data' ireo fichiers .json")
+else:
+    st.error("Tsy hita ny dossier 'data' ao amin'ny GitHub-nao.")
