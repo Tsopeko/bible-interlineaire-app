@@ -16,36 +16,34 @@ def load_book(name):
 
 st.title("📖 Baiboly Malagasy 1865")
 
-# --- BARRE DE RECHERCHE DANS LA SIDEBAR ---
+# --- BARRE DE RECHERCHE ---
 st.sidebar.header("🔍 Karoka")
 mot_cle = st.sidebar.text_input("Hikaroka teny (ohatra: Jesosy)")
 
 if mot_cle:
     st.header(f"Valin'ny karoka: '{mot_cle}'")
-    found = False
-    
-    # On parcourt tous les fichiers .json du dossier data
-    files = [f.replace('.json', '') for f in os.listdir(DATA_PATH) if f.endswith('.json')]
+    if st.button("Hiverina hamaky"):
+        st.rerun()
+        
+    found_count = 0
+    files = sorted([f.replace('.json', '') for f in os.listdir(DATA_PATH) if f.endswith('.json')])
     
     for file in files:
         book_data = load_book(file)
         if book_data:
-            # On parcourt chaque chapitre
             for chap_num, versets in book_data.items():
                 if isinstance(versets, dict):
-                    # On parcourt chaque verset
                     for v_num, txt in versets.items():
                         if mot_cle.lower() in txt.lower():
-                            st.write(f"**{file} {chap_num}:{v_num}**")
-                            st.write(f"_{txt}_")
-                            st.divider()
-                            found = True
+                            # Affichage stylisé du résultat
+                            st.markdown(f"**{file} {chap_num}:{v_num}**")
+                            st.info(txt)
+                            found_count += 1
     
-    if not found:
-        st.warning("Tsy nisy valiny io karoka io.")
-    st.stop() # On arrête l'affichage normal si on est en mode recherche
+    st.sidebar.write(f"Verset {found_count} no hita.")
+    st.stop() 
 
-# --- AFFICHAGE NORMAL (LECTURE) ---
+# --- AFFICHAGE LECTURE (Normal) ---
 if os.path.exists(DATA_PATH):
     files = sorted([f.replace('.json', '') for f in os.listdir(DATA_PATH) if f.endswith('.json')])
     if files:
