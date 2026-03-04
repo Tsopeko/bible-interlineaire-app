@@ -2,7 +2,6 @@ import streamlit as st
 import json
 import os
 
-# Fikirana fototra ny pejy
 st.set_page_config(page_title="Baiboly Malagasy 1865", layout="wide", page_icon="📖")
 
 DATA_PATH = "data"
@@ -17,11 +16,9 @@ def load_book(name):
 
 st.title("📖 Baiboly Malagasy 1865")
 
-# --- PARAMÈTRES D'AFFICHAGE (SideBar) ---
+# --- PARAMÈTRES D'AFFICHAGE ---
 st.sidebar.header("⚙️ Fikirana")
-# Ity ny slider hanovana ny haben'ny soratra
 taille_texte = st.sidebar.slider("Haben'ny soratra", 14, 40, 20)
-
 st.sidebar.divider()
 
 # --- MOTEUR DE RECHERCHE ---
@@ -36,7 +33,6 @@ if mot_cle:
     found_count = 0
     if os.path.exists(DATA_PATH):
         files = sorted([f.replace('.json', '') for f in os.listdir(DATA_PATH) if f.endswith('.json')])
-        
         for file in files:
             book_data = load_book(file)
             if book_data:
@@ -44,10 +40,10 @@ if mot_cle:
                     if isinstance(versets, dict):
                         for v_num, txt in versets.items():
                             if mot_cle.lower() in txt.lower():
-                                # Fampisehoana ny vokatry ny karoka
-                                st.markdown(f'<div style="font-size:{taille_texte}px; border-left: 3px solid #ff4b4b; padding-left: 10px; margin-bottom: 20px;"><b>{file} {chap_num}:{v_num}</b><br>{txt}</div>', unsafe_html=True)
+                                # Fomba fanoratana tsotra tsy misy TypeError
+                                style = f"font-size:{taille_texte}px; border-left:3px solid red; padding-left:10px; margin-bottom:20px;"
+                                st.markdown(f'<div style="{style}"><b>{file} {chap_num}:{v_num}</b><br>{txt}</div>', unsafe_html=True)
                                 found_count += 1
-    
     st.sidebar.info(f"Verset {found_count} no hita.")
     st.stop() 
 
@@ -66,15 +62,10 @@ if os.path.exists(DATA_PATH):
                 versets_dict = data[chap_num]
                 v_keys = sorted([v for v in versets_dict.keys() if v.isdigit()], key=int)
                 
-                # Fampisehoana ny andininy tsirairay
+                # Ity ny fomba namboarina mba tsy hisy diso intsony
                 for v_num in v_keys:
                     txt_verset = versets_dict[v_num]
-                    # Ampiasaina ny f-string miaraka amin'ny fonon-tselatra (curly braces) mazava
-                    html_code = f'<div style="font-size:{taille_texte}px; margin-bottom:12px; line-height: 1.6;"><b>{v_num}.</b> {txt_verset}</div>'
-                    st.markdown(html_code, unsafe_html=True)
-            else:
-                st.warning("Tsy hita ny toko ato amin'ity boky ity.")
+                    # Tsy asiana fonon-tselatra {} maromaro intsony ao anaty markdown iray
+                    st.markdown(f'<div style="font-size:{taille_texte}px; margin-bottom:10px;"><b>{v_num}.</b> {txt_verset}</div>', unsafe_html=True)
     else:
         st.info("Ampidiro ao anatin'ny dossier 'data' ireo fichiers .json")
-else:
-    st.error("Tsy hita ny dossier 'data' ao amin'ny GitHub-nao.")
