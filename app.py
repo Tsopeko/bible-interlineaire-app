@@ -25,8 +25,7 @@ st.title("📖 Baiboly Mg1865 Interlineaire")
 data = load_bible_data()
 
 if data:
-    # Ny Mg1865.json dia matetika manana rafitra { "books": { "Genesisy": { "1": { "1": "soratra" } } } }
-    # Raha tsy misy 'books' dia raisina ho ny data manontolo no misy ny boky
+    # Ny Mg1865.json dia matetika manana rafitra { "books": { "Genesisy": { ... } } }
     bible_content = data.get('books', data)
     
     if isinstance(bible_content, dict):
@@ -55,7 +54,7 @@ if data:
                     cols = st.columns(len(strong_codes))
                     for i, code in enumerate(strong_codes):
                         if cols[i].button(f"🔍 {code}", key=f"{ch_sel}_{v_num}_{code}"):
-                            # Mitady ny diksionera mifanaraka aminy
+                            # Mitady ny diksionera mifanaraka aminy eo amin'ny root
                             dict_file = "strongs-greek-dictionary.json" if code.startswith('G') else "strongs-hebrew-dictionary.json"
                             if os.path.exists(dict_file):
                                 with open(dict_file, 'r', encoding='utf-8') as df:
