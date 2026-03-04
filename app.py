@@ -21,7 +21,35 @@ st.sidebar.header("⚙️ Fikirana")
 # Nesorintsika aloha ilay zoom fa miteraka TypeError
 st.sidebar.info("Miasa ny fikarohana sy ny famakiana.")
 st.sidebar.divider()
+# --- DICTIONNAIRE STRONG ---
+st.sidebar.divider()
+st.sidebar.header("📚 Diksionera Strong")
+strong_code = st.sidebar.text_input("Hampidiro ny code (ohatra: G2424 na H7225)")
 
+if strong_code:
+    # Mamaritra raha Grika na Hebreo ny code
+    is_greek = strong_code.upper().startswith('G')
+    is_hebrew = strong_code.upper().startswith('H')
+    
+    dict_file = "strongs-greek-dictionary" if is_greek else "strongs-hebrew-dictionary"
+    
+    # Manala ny litera mba hahazoana ny isa fotsiny raha ilaina amin'ny fikarohana
+    clean_code = strong_code.upper()
+    
+    try:
+        with open(f"{dict_file}.json", 'r', encoding='utf-8') as f:
+            strong_data = json.load(f)
+            
+        if clean_code in strong_data:
+            info = strong_data[clean_code]
+            st.info(f"**Strong {clean_code}**")
+            # Afaka ovaina arakaraka ny firafitry ny JSON-nao ireto fields ireto
+            st.write(f"**Dikany:** {info.get('lemma', '')} - {info.get('translit', '')}")
+            st.write(f"**Mombamomba:** {info.get('definition', '')}")
+        else:
+            st.sidebar.error("Tsy hita io code io.")
+    except Exception as e:
+        st.sidebar.warning("Tsy mbola vaky ny diksionera. Hamarino ny anaran'ny fichier.")
 # --- MOTEUR DE RECHERCHE ---
 st.sidebar.header("🔍 Karoka")
 mot_cle = st.sidebar.text_input("Hikaroka teny")
